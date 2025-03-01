@@ -61,4 +61,52 @@ export async function getAlbumInfo(artist, album) {
   }
   
   return data.album;
+}
+
+export async function getArtistInfo(artist) {
+  const response = await fetch(
+    `${BASE_URL}?method=artist.getinfo&artist=${encodeURIComponent(artist)}&api_key=${API_KEY}&format=json`
+  );
+  const data = await response.json();
+  console.log(data,"data")
+  return data.artist;
+}
+
+export async function getArtistAlbums(artist) {
+  const response = await fetch(
+    `${BASE_URL}?method=artist.gettopalbums&artist=${encodeURIComponent(artist)}&api_key=${API_KEY}&format=json`
+  );
+  const data = await response.json();
+  return data.topalbums.album;
+}
+
+export async function searchArtists(query = '', page = 1) {
+  if (!query) return { results: { artistmatches: { artist: [] } } };
+
+  const params = new URLSearchParams({
+    method: 'artist.search',
+    artist: query,
+    api_key: API_KEY,
+    format: 'json',
+    limit: 24,
+    page: page
+  });
+
+  const response = await fetch(`${BASE_URL}?${params}`);
+  const data = await response.json();
+  return data;
+}
+
+export async function getTopArtists(page = 1) {
+  const params = new URLSearchParams({
+    method: 'chart.gettopartists',
+    api_key: API_KEY,
+    format: 'json',
+    limit: 24,
+    page: page
+  });
+
+  const response = await fetch(`${BASE_URL}?${params}`);
+  const data = await response.json();
+  return data;
 } 

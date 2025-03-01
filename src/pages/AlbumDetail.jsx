@@ -5,6 +5,7 @@ import CommentSection from '../components/CommentSection';
 import { FaHeart, FaRegHeart, FaHeadphones, FaMusic } from 'react-icons/fa';
 import { useAlbumStatus } from '../hooks/useAlbumActions';
 import { useAuth } from '../contexts/AuthContext';
+import { Link } from 'react-router-dom';
 
 export default function AlbumDetail() {
   const { artist, album } = useParams();
@@ -75,7 +76,12 @@ export default function AlbumDetail() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-3xl font-bold text-white">{albumInfo.name}</h1>
-              <p className="text-xl text-gray-400">{albumInfo.artist}</p>
+              <Link 
+                to={`/artist/${encodeURIComponent(albumInfo.artist)}`}
+                className="text-xl text-gray-400 hover:text-purple-400 transition-colors"
+              >
+                {albumInfo.artist}
+              </Link>
             </div>
           </div>
 

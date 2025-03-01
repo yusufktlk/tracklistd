@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getTopAlbums, searchAlbums } from '../services/lastfm';
 import AlbumCard from '../components/AlbumCard';
 
-export default function Discover() {
+export default function Albums() {
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const [debouncedQuery, setDebouncedQuery] = useState('');

@@ -33,9 +33,7 @@ export default function AlbumCard({ album }) {
     >
       {currentUser && (
         <div 
-          className="absolute top-2 right-2 flex gap-2 z-50 opacity-0 group-hover:opacity-100 transition-all duration-200"
-          style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
-        >
+          className="absolute top-2 right-2 flex gap-2 z-50 opacity-0 group-hover:opacity-100 transition-all duration-200">
           <button
             onClick={(e) => handleAction(e, toggleFavorite)}
             disabled={isLoading}
@@ -75,7 +73,13 @@ export default function AlbumCard({ album }) {
             {album.name}
           </h3>
           <p className="text-gray-400 text-sm truncate">
-            {artistName}
+            <Link 
+              to={`/artist/${encodeURIComponent(artistName)}`}
+              className="hover:text-purple-400 transition-colors"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {artistName}
+            </Link>
           </p>
         </div>
       </div>

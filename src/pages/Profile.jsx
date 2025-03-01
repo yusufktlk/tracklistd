@@ -26,20 +26,20 @@ export default function Profile() {
     fetchUserProfile();
   }, [userId, currentUser]);
 
-  const [activeTab, setActiveTab] = useState('listened'); 
+  const [activeTab, setActiveTab] = useState('favorites');
 
   const tabs = [
-    {
-      id: 'listened',
-      label: 'Dinlenenler',
-      icon: <FaHeadphones className="text-lg" />,
-      activeColor: 'bg-purple-600'
-    },
     {
       id: 'favorites',
       label: 'Favoriler',
       icon: <FaHeart className="text-lg" />,
       activeColor: 'bg-pink-600'
+    },
+    {
+      id: 'listened',
+      label: 'Dinlenenler',
+      icon: <FaHeadphones className="text-lg" />,
+      activeColor: 'bg-purple-600'
     }
   ];
 

@@ -3,13 +3,15 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
-import Discover from './pages/Discover';
 import Profile from './pages/Profile';
 import AlbumDetail from './pages/AlbumDetail';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import EditProfile from './pages/EditProfile';
+import ArtistDetail from './pages/ArtistDetail';
+import Artists from './pages/Artists';
 import { AuthProvider } from './contexts/AuthContext';
+import Albums from './pages/Albums';
 
 const queryClient = new QueryClient();
 
@@ -34,10 +36,12 @@ function App() {
             <main className="container mx-auto px-4 py-8">
               <Routes>
                 <Route path="/" element={<Home />} />
-                <Route path="/discover" element={<Discover />} />
+                <Route path="/albums" element={<Albums />} />
+                <Route path="/artists" element={<Artists />} />
                 <Route path="/profile/:userId" element={<Profile />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/album/:artist/:album" element={<AlbumDetail />} />
+                <Route path="/artist/:artist" element={<ArtistDetail />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/profile/edit" element={<EditProfile />} />
