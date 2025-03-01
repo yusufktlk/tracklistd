@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getArtistInfo, getArtistAlbums } from '../services/lastfm';
 import AlbumCard from '../components/AlbumCard';
 import { FaTag, FaLink, FaCalendar } from 'react-icons/fa';
+import Loading from '../components/Loading';
 
 export default function ArtistDetail() {
   const { artist } = useParams();
@@ -17,7 +18,7 @@ export default function ArtistDetail() {
     queryFn: () => getArtistAlbums(artist)
   });
 
-  if (artistLoading || albumsLoading) return <div className="text-gray-400">Yükleniyor...</div>;
+  if (artistLoading || albumsLoading) return <Loading size="large" />;
   if (artistError) return <div className="text-red-500">Bir hata oluştu</div>;
 
   return (

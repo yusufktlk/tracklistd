@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getTopAlbums, searchAlbums } from '../services/lastfm';
 import AlbumCard from '../components/AlbumCard';
+import Loading from '../components/Loading';
 
 export default function Albums() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -42,7 +43,7 @@ export default function Albums() {
       </div>
 
       {isLoading ? (
-        <div className="text-gray-400">Yükleniyor...</div>
+        <Loading />
       ) : error ? (
         <div className="text-red-500">Bir hata oluştu: {error.message}</div>
       ) : albums?.length > 0 ? (

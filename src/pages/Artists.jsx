@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { searchArtists, getTopArtists } from '../services/lastfm';
 import { Link } from 'react-router-dom';
 import { FaUser } from 'react-icons/fa';
+import Loading from '../components/Loading';
 
 export default function Artists() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -41,7 +42,7 @@ export default function Artists() {
       </div>
 
       {isLoading ? (
-        <div className="text-gray-400">Yükleniyor...</div>
+        <Loading />
       ) : error ? (
         <div className="text-red-500">Bir hata oluştu: {error.message}</div>
       ) : artists?.length > 0 ? (
