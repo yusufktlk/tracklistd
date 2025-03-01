@@ -1,0 +1,53 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read: if true;
+      allow create, update, write: if request.auth != null && 
+        request.auth.uid == userId;
+    }
+    
+    match /comments/{commentId} {
+      // Okuma herkes için açık
+      allow read: if true;
+      
+      // Yazma için basit yetkilendirme
+      allow create: if request.auth != null;
+      
+      // Kullanıcı sadece kendi yorumunu silebilir
+      allow delete: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+        
+      allow update: if false;
+    }
+    
+    match /favorites/{favoriteId} {
+      allow read: if true;
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.userId;
+      allow delete: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+      allow update: if false;
+    }
+    
+    match /listened/{listenedId} {
+      // Herkes okuyabilir
+      allow read: if true;
+      
+      // Giriş yapmış kullanıcılar ekleyebilir
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.userId;
+      
+      // Kullanıcılar kendi kayıtlarını silebilir
+      allow delete: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+        
+      allow update: if false;
+    }
+    
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
