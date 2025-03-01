@@ -9,6 +9,7 @@ import Modal from './Modal';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { Link } from 'react-router-dom';
+import Avatar from './Avatar';
 
 export default function CommentSection({ albumId }) {
   const [comment, setComment] = useState('');
@@ -134,24 +135,11 @@ export default function CommentSection({ albumId }) {
             comments.map((comment) => (
               <div key={comment.id} className="bg-gray-800 rounded-lg p-4">
                 <div className="flex items-center space-x-4">
-                  <Link 
-                    to={`/profile/${comment.userId}`}
-                    className="flex-shrink-0 hover:opacity-80 transition-opacity"
-                  >
-                    <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-700">
-                      {userProfiles[comment.userId]?.avatar ? (
-                        <img
-                          src={userProfiles[comment.userId].avatar}
-                          alt={userProfiles[comment.userId].nickname || 'User'}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400">
-                          <FaUser size={20} />
-                        </div>
-                      )}
-                    </div>
-                  </Link>
+                  <Avatar
+                    src={userProfiles[comment.userId]?.photoURL}
+                    alt={userProfiles[comment.userId]?.displayName}
+                    size="default"
+                  />
 
                   <div className="flex-grow">
                     <div className="flex items-center justify-between mb-2">

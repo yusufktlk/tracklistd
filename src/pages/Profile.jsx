@@ -5,6 +5,8 @@ import { db } from '../config/firebase';
 import { Link, useParams } from 'react-router-dom';
 import { FaHeart, FaHeadphones, FaEdit, FaUser } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
+import Avatar from '../components/Avatar';
+import Loading from '../components/Loading';
 
 export default function Profile() {
   const { userId } = useParams();
@@ -94,11 +96,7 @@ export default function Profile() {
   const isLoading = favoritesLoading || listenedLoading;
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <div className="text-gray-400">Yükleniyor...</div>
-      </div>
-    );
+    return <Loading size="large" />;
   }
 
   const activeData = activeTab === 'favorites' ? favorites : listened;
@@ -112,19 +110,11 @@ export default function Profile() {
       <div className="bg-gray-800 rounded-lg p-6 mb-8">
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-6">
-            <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-700">
-              {userProfile?.avatar ? (
-                <img
-                  src={userProfile.avatar}
-                  alt="Profile"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-400">
-                  <FaUser size={40} />
-                </div>
-              )}
-            </div>
+            <Avatar
+              src={userProfile?.avatar}
+              alt={userProfile?.nickname}
+              size="large"
+            />
             <div>
               <h1 className="text-2xl font-bold text-white">
                 {userProfile?.nickname || 'İsimsiz Kullanıcı'}
