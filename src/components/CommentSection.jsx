@@ -135,11 +135,16 @@ export default function CommentSection({ albumId }) {
             comments.map((comment) => (
               <div key={comment.id} className="bg-gray-800 rounded-lg p-4">
                 <div className="flex items-center space-x-4">
-                  <Avatar
-                    src={userProfiles[comment.userId]?.photoURL}
-                    alt={userProfiles[comment.userId]?.displayName}
-                    size="default"
-                  />
+                  <Link 
+                    to={`/profile/${comment.userId}`}
+                    className="flex-shrink-0 hover:opacity-80 transition-opacity"
+                  >
+                    <Avatar
+                      src={userProfiles[comment.userId]?.avatar}
+                      alt={userProfiles[comment.userId]?.nickname}
+                      size="default"
+                    />
+                  </Link>
 
                   <div className="flex-grow">
                     <div className="flex items-center justify-between mb-2">
