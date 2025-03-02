@@ -37,7 +37,6 @@ export default function EditFavoriteAlbumsModal({ isOpen, onClose, currentFavori
 
   return (
     <Modal
-      size='3xl'
       isOpen={isOpen}
       onClose={onClose}
       title="Favori Albümleri Düzenle"

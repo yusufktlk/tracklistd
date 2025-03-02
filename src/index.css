@@ -6,4 +6,16 @@
   body {
     @apply text-white;
   }
+
+  ::-webkit-scrollbar {
+    width: 8px; 
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #121212; 
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #333333;
+  }
 }
