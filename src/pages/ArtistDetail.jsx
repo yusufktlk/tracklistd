@@ -1,12 +1,21 @@
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getArtistInfo, getArtistAlbums } from '../services/lastfm';
+import { spotifyApi } from '../services/spotify';
+import { useSpotify } from '../contexts/SpotifyContext';
 import AlbumCard from '../components/AlbumCard';
 import { FaTag, FaLink, FaCalendar } from 'react-icons/fa';
 import Loading from '../components/Loading';
 
 export default function ArtistDetail() {
   const { artist } = useParams();
+  const { spotifyToken } = useSpotify();
+
+  const { data: spotifyArtist } = useQuery({
+    queryKey: ['spotify-artist', artist, spotifyToken?.access_token],
+    queryFn: () => spotifyApi.searchArtist(spotifyToken.access_token, artist),
+    enabled: !!spotifyToken?.access_token
+  });
 
   const { data: artistInfo, isLoading: artistLoading, error: artistError } = useQuery({
     queryKey: ['artist', artist],
@@ -26,7 +35,7 @@ export default function ArtistDetail() {
       <div className="flex flex-col md:flex-row gap-8">
         <div className="md:w-1/3">
           <img
-            src={artistInfo?.image?.[4]['#text'] || artistInfo?.image?.[3]['#text'] || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDMwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjMwMCIgaGVpZ2h0PSIzMDAiIGZpbGw9IiMxRjI5MzciLz48cGF0aCBkPSJNMTUwIDEyNUMxNjcuMzIgMTI1IDE4MS4yNSAxMTEuMDcgMTgxLjI1IDkzLjc1QzE4MS4yNSA3Ni40MyAxNjcuMzIgNjIuNSAxNTAgNjIuNUMxMzIuNjggNjIuNSAxMTguNzUgNzYuNDMgMTE4Ljc1IDkzLjc1QzExOC43NSAxMTEuMDcgMTMyLjY4IDEyNSAxNTAgMTI1WiIgZmlsbD0iIzRCNTU2MyIvPjxwYXRoIGQ9Ik0yMTIuNSAyMTguNzVDMjEyLjUgMTg0LjUgMTg0LjI1IDE1Ni4yNSAxNTAgMTU2LjI1QzExNS43NSAxNTYuMjUgODcuNSAxODQuNSA4Ny41IDIxOC43NVYyMzcuNUgyMTIuNVYyMTguNzVaIiBmaWxsPSIjNEI1NTYzIi8+PC9zdmc+'}
+            src={spotifyArtist?.images?.[0]?.url || artistInfo?.image?.[3]['#text'] || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDMwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjMwMCIgaGVpZ2h0PSIzMDAiIGZpbGw9IiMxRjI5MzciLz48cGF0aCBkPSJNMTUwIDEyNUMxNjcuMzIgMTI1IDE4MS4yNSAxMTEuMDcgMTgxLjI1IDkzLjc1QzE4MS4yNSA3Ni40MyAxNjcuMzIgNjIuNSAxNTAgNjIuNUMxMzIuNjggNjIuNSAxMTguNzUgNzYuNDMgMTE4Ljc1IDkzLjc1QzExOC43NSAxMTEuMDcgMTMyLjY4IDEyNSAxNTAgMTI1WiIgZmlsbD0iIzRCNTU2MyIvPjxwYXRoIGQ9Ik0yMTIuNSAyMTguNzVDMjEyLjUgMTg0LjUgMTg0LjI1IDE1Ni4yNSAxNTAgMTU2LjI1QzExNS43NSAxNTYuMjUgODcuNSAxODQuNSA4Ny41IDIxOC43NVYyMzcuNUgyMTIuNVYyMTguNzVaIiBmaWxsPSIjNEI1NTYzIi8+PC9zdmc+'}
             alt={artistInfo?.name}
             className="w-full rounded-lg shadow-lg mb-6"
           />
@@ -88,7 +97,11 @@ export default function ArtistDetail() {
               </div>
               <div className="prose prose-invert max-w-none">
                 <p className="text-gray-300 leading-relaxed">
-                  {artistInfo.bio.content.split('<a')[0]}
+                  {artistInfo.bio.content
+                    .split('<a')[0]
+                    .split('.')
+                    .slice(0, 22)
+                    .join('.') + '...'}
                 </p>
               </div>
             </div>

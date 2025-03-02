@@ -2,12 +2,46 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /users/{userId} {
-      allow read: if true;
-      allow create, update, write: if request.auth != null && 
-        request.auth.uid == userId;
+    // Kullanıcı kimlik doğrulaması yapılmış mı kontrol et
+    function isAuthenticated() {
+      return request.auth != null;
     }
-    
+
+    // İsteği yapan kullanıcı, belgenin sahibi mi kontrol et
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // Kullanıcı profilleri
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId);
+      
+      // Spotify profil güncellemelerine izin ver
+      allow update: if isOwner(userId) && 
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['spotifyToken', 'spotifyProfile', 'lastSpotifySync']);
+    }
+
+    // Dinlenen albümler
+    match /listened/{document=**} {
+      allow read: if isAuthenticated();
+      // Kullanıcının kendi dinlediği albümleri eklemesine izin ver
+      allow create, update: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+    }
+
+    // Favoriler
+    match /favorites/{document=**} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+    }
+
     match /comments/{commentId} {
       // Okuma herkes için açık
       allow read: if true;
@@ -16,30 +50,6 @@ service cloud.firestore {
       allow create: if request.auth != null;
       
       // Kullanıcı sadece kendi yorumunu silebilir
-      allow delete: if request.auth != null && 
-        request.auth.uid == resource.data.userId;
-        
-      allow update: if false;
-    }
-    
-    match /favorites/{favoriteId} {
-      allow read: if true;
-      allow create: if request.auth != null && 
-        request.auth.uid == request.resource.data.userId;
-      allow delete: if request.auth != null && 
-        request.auth.uid == resource.data.userId;
-      allow update: if false;
-    }
-    
-    match /listened/{listenedId} {
-      // Herkes okuyabilir
-      allow read: if true;
-      
-      // Giriş yapmış kullanıcılar ekleyebilir
-      allow create: if request.auth != null && 
-        request.auth.uid == request.resource.data.userId;
-      
-      // Kullanıcılar kendi kayıtlarını silebilir
       allow delete: if request.auth != null && 
         request.auth.uid == resource.data.userId;
         

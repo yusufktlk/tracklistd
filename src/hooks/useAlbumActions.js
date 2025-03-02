@@ -7,39 +7,46 @@ import {
   getDocs,
   addDoc,
   deleteDoc,
-  doc 
+  doc,
+  getDoc,
+  setDoc,
+  serverTimestamp
 } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
+import { toast } from 'react-hot-toast';
 
 export function useAlbumStatus(albumId, albumInfo) {
+  const cleanAlbumId = albumId
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
   const queryClient = useQueryClient();
 
   const { data: status = { isFavorite: false, isListened: false }, isLoading } = useQuery({
-    queryKey: ['albumStatus', albumId, auth.currentUser?.uid],
+    queryKey: ['albumStatus', cleanAlbumId, auth.currentUser?.uid],
     queryFn: async () => {
       if (!auth.currentUser) return { isFavorite: false, isListened: false };
 
-      const [favSnapshot, listenedSnapshot] = await Promise.all([
+      const listenedRef = doc(db, 'listened', `${auth.currentUser.uid}-${cleanAlbumId}`);
+      const listenedDoc = await getDoc(listenedRef);
+
+      const [favSnapshot] = await Promise.all([
         getDocs(query(
           collection(db, 'favorites'),
-          where('albumId', '==', albumId),
-          where('userId', '==', auth.currentUser.uid)
-        )),
-        getDocs(query(
-          collection(db, 'listened'),
-          where('albumId', '==', albumId),
+          where('albumId', '==', cleanAlbumId),
           where('userId', '==', auth.currentUser.uid)
         ))
       ]);
 
       return {
         isFavorite: !favSnapshot.empty,
-        isListened: !listenedSnapshot.empty,
+        isListened: listenedDoc.exists(),
         favoriteId: favSnapshot.docs[0]?.id,
-        listenedId: listenedSnapshot.docs[0]?.id
+        source: listenedDoc.exists() ? listenedDoc.data().source : null
       };
     },
-    enabled: !!auth.currentUser && !!albumId
+    enabled: !!auth.currentUser && !!cleanAlbumId
   });
 
   const toggleFavorite = useCallback(async () => {
@@ -50,7 +57,7 @@ export function useAlbumStatus(albumId, albumInfo) {
         await deleteDoc(doc(db, 'favorites', status.favoriteId));
       } else {
         const albumData = {
-          albumId,
+          albumId: cleanAlbumId,
           userId: auth.currentUser.uid,
           createdAt: new Date().toISOString(),
           albumData: {
@@ -63,74 +70,65 @@ export function useAlbumStatus(albumId, albumInfo) {
         await addDoc(collection(db, 'favorites'), albumData);
       }
       
-      queryClient.invalidateQueries(['albumStatus', albumId]);
+      queryClient.invalidateQueries(['albumStatus', cleanAlbumId]);
       queryClient.invalidateQueries(['favorites', auth.currentUser.uid]);
     } catch (error) {
       console.error('Error toggling favorite:', error);
     }
-  }, [albumId, albumInfo, status.isFavorite, status.favoriteId, queryClient]);
+  }, [cleanAlbumId, albumInfo, status.isFavorite, status.favoriteId, queryClient]);
 
-  const toggleListened = useCallback(async () => {
-    console.log('Toggle listened called:', {
-      currentUser: auth.currentUser,
-      albumInfo,
-      albumId
-    });
+  const checkListened = async () => {
+    if (!auth.currentUser) return false;
+    
+    const listenedRef = doc(db, 'listened', `${auth.currentUser.uid}-${cleanAlbumId}`);
+    const docSnap = await getDoc(listenedRef);
+    
+    return docSnap.exists() && (
+      docSnap.data().source === 'manual' || 
+      docSnap.data().source === 'spotify'
+    );
+  };
 
-    if (!auth.currentUser || !albumInfo) {
-      console.log('Toggle listened failed:', { 
-        hasUser: !!auth.currentUser, 
-        hasAlbumInfo: !!albumInfo,
-        albumInfo 
-      });
+  const toggleListened = async () => {
+    if (!auth.currentUser) {
+      toast.error('Önce giriş yapmalısınız');
       return;
     }
 
+    const listenedRef = doc(db, 'listened', `${auth.currentUser.uid}-${cleanAlbumId}`);
+
     try {
       if (status.isListened) {
-        console.log('Removing from listened:', {
-          listenedId: status.listenedId,
-          userId: auth.currentUser.uid
-        });
-        await deleteDoc(doc(db, 'listened', status.listenedId));
+        await deleteDoc(listenedRef);
+        toast.success('Dinlenenlerden kaldırıldı');
       } else {
-        const albumData = {
-          albumId,
+        const docSnap = await getDoc(listenedRef);
+        if (docSnap.exists()) {
+          toast.error('Bu albüm zaten dinlenenlerde mevcut');
+          return;
+        }
+
+        await setDoc(listenedRef, {
           userId: auth.currentUser.uid,
-          createdAt: new Date().toISOString(),
+          albumId: cleanAlbumId,
           albumData: {
-            name: albumInfo.name,
-            artist: albumInfo.artist,
-            image: albumInfo.image?.[3]['#text'] || albumInfo.image?.[0]['#text']
-          }
-        };
-
-        console.log('Adding to listened:', albumData);
-        const docRef = await addDoc(collection(db, 'listened'), albumData);
-        console.log('Added to listened with ID:', docRef.id);
+            name: albumInfo?.name,
+            artist: albumInfo?.artist,
+            image: albumInfo?.image?.[3]['#text']
+          },
+          source: 'manual',
+          createdAt: serverTimestamp()
+        });
+        toast.success('Dinlenenlere eklendi');
       }
-      
-      console.log('Invalidating queries for:', {
-        albumId,
-        userId: auth.currentUser.uid,
-        queries: [
-          ['albumStatus', albumId],
-          ['listened', auth.currentUser.uid]
-        ]
-      });
 
-      queryClient.invalidateQueries(['albumStatus', albumId]);
-      queryClient.invalidateQueries(['listened', auth.currentUser.uid]);
-      
-      setTimeout(() => {
-        const cache = queryClient.getQueryData(['listened', auth.currentUser.uid]);
-        console.log('Cache after invalidation:', cache);
-      }, 100);
-
+      queryClient.invalidateQueries(['listened']);
+      queryClient.invalidateQueries(['albumStatus', cleanAlbumId]);
     } catch (error) {
       console.error('Error toggling listened:', error);
+      toast.error('Bir hata oluştu');
     }
-  }, [albumId, albumInfo, status.isListened, status.listenedId, queryClient]);
+  };
 
   return {
     isFavorite: status.isFavorite,

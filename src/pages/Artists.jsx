@@ -1,14 +1,19 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueries } from '@tanstack/react-query';
 import { searchArtists, getTopArtists } from '../services/lastfm';
+import { spotifyApi } from '../services/spotify';
+import { useSpotify } from '../contexts/SpotifyContext';
 import { Link } from 'react-router-dom';
 import { FaUser } from 'react-icons/fa';
 import Loading from '../components/Loading';
+import { useParams } from 'react-router-dom';
 
 export default function Artists() {
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const [debouncedQuery, setDebouncedQuery] = useState('');
+  const { spotifyToken } = useSpotify();
+  const { artist } = useParams();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -25,6 +30,20 @@ export default function Artists() {
   });
 
   const artists = debouncedQuery ? data?.results?.artistmatches?.artist : data?.artists?.artist;
+
+  const spotifyArtistQueries = useQueries({
+    queries: (artists || []).map(artist => ({
+      queryKey: ['spotify-artist', artist.name, spotifyToken?.access_token],
+      queryFn: () => spotifyApi.searchArtist(spotifyToken.access_token, artist.name),
+      enabled: !!spotifyToken?.access_token
+    }))
+  });
+
+  const spotifyImages = Object.fromEntries(
+    spotifyArtistQueries
+      .map((query, index) => [artists[index]?.name, query.data?.images?.[0]?.url])
+      .filter(([name, url]) => name && url)
+  );
 
   return (
     <div>
@@ -52,11 +71,11 @@ export default function Artists() {
               <Link
                 key={artist.name}
                 to={`/artist/${encodeURIComponent(artist.name)}`}
-                className="group bg-gray-800 rounded-lg overflow-hidden transition-all duration-200 hover:scale-105 hover:shadow-xl"
+                className="bg-gray-800 rounded-lg overflow-hidden hover:bg-gray-700 transition-colors group"
               >
                 <div className="aspect-square">
                   <img
-                    src={artist.image?.[2]['#text'] || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDMwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjMwMCIgaGVpZ2h0PSIzMDAiIGZpbGw9IiMxRjI5MzciLz48cGF0aCBkPSJNMTUwIDEyNUMxNjcuMzIgMTI1IDE4MS4yNSAxMTEuMDcgMTgxLjI1IDkzLjc1QzE4MS4yNSA3Ni40MyAxNjcuMzIgNjIuNSAxNTAgNjIuNUMxMzIuNjggNjIuNSAxMTguNzUgNzYuNDMgMTE4Ljc1IDkzLjc1QzExOC43NSAxMTEuMDcgMTMyLjY4IDEyNSAxNTAgMTI1WiIgZmlsbD0iIzRCNTU2MyIvPjxwYXRoIGQ9Ik0yMTIuNSAyMTguNzVDMjEyLjUgMTg0LjUgMTg0LjI1IDE1Ni4yNSAxNTAgMTU2LjI1QzExNS43NSAxNTYuMjUgODcuNSAxODQuNSA4Ny41IDIxOC43NVYyMzcuNUgyMTIuNVYyMTguNzVaIiBmaWxsPSIjNEI1NTYzIi8+PC9zdmc+'}
+                    src={spotifyImages[artist.name] || artist.image?.[2]['#text'] || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDMwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjMwMCIgaGVpZ2h0PSIzMDAiIGZpbGw9IiMxRjI5MzciLz48cGF0aCBkPSJNMTUwIDEyNUMxNjcuMzIgMTI1IDE4MS4yNSAxMTEuMDcgMTgxLjI1IDkzLjc1QzE4MS4yNSA3Ni40MyAxNjcuMzIgNjIuNSAxNTAgNjIuNUMxMzIuNjggNjIuNSAxMTguNzUgNzYuNDMgMTE4Ljc1IDkzLjc1QzExOC43NSAxMTEuMDcgMTMyLjY4IDEyNSAxNTAgMTI1WiIgZmlsbD0iIzRCNTU2MyIvPjxwYXRoIGQ9Ik0yMTIuNSAyMTguNzVDMjEyLjUgMTg0LjUgMTg0LjI1IDE1Ni4yNSAxNTAgMTU2LjI1QzExNS43NSAxNTYuMjUgODcuNSAxODQuNSA4Ny41IDIxOC43NVYyMzcuNUgyMTIuNVYyMTguNzVaIiBmaWxsPSIjNEI1NTYzIi8+PC9zdmc+'}
                     alt={artist.name}
                     className="w-full h-full object-cover"
                   />

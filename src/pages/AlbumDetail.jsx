@@ -6,10 +6,15 @@ import { FaHeart, FaRegHeart, FaHeadphones, FaMusic, FaPlay, FaUser, FaTag, FaCa
 import { useAlbumStatus } from '../hooks/useAlbumActions';
 import { useAuth } from '../contexts/AuthContext';
 import Loading from '../components/Loading';
+import { doc, getDoc, setDoc, deleteDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../config/firebase';
+import { toast } from 'react-hot-toast';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function AlbumDetail() {
   const { artist, album } = useParams();
   const { currentUser } = useAuth();
+  const queryClient = useQueryClient();
 
   const albumId = `${artist}-${album}`.toLowerCase().replace(/\s+/g, '-');
 
@@ -20,7 +25,7 @@ export default function AlbumDetail() {
 
   const { 
     isFavorite, 
-    isListened, 
+    isListened,
     toggleFavorite, 
     toggleListened, 
     isLoading: isStatusLoading 
@@ -35,7 +40,7 @@ export default function AlbumDetail() {
   if (albumLoading) return <Loading size="large" />;
   if (albumError) return <div className="text-red-500">Bir hata oluştu</div>;
 
-  const totalDuration = albumInfo?.tracks?.track?.reduce((acc, track) => acc + (track.duration || 0), 0);
+  const totalDuration = tracks.reduce((acc, track) => acc + (track.duration || 0), 0);
   const hours = Math.floor(totalDuration / 3600);
   const minutes = Math.floor((totalDuration % 3600) / 60);
 
@@ -97,7 +102,7 @@ export default function AlbumDetail() {
             <div className="bg-gray-800 rounded-lg p-6">
               <h3 className="text-lg font-semibold mb-4">Etiketler</h3>
               <div className="flex flex-wrap gap-2">
-                {albumInfo.tags.tag.map(tag => (
+                {(Array.isArray(albumInfo.tags.tag) ? albumInfo.tags.tag : [albumInfo.tags.tag]).map(tag => (
                   <a
                     key={tag.name}
                     href={tag.url}
@@ -128,10 +133,10 @@ export default function AlbumDetail() {
           </div>
 
           <div className="flex flex-wrap gap-4 text-sm text-gray-400 mb-8">
-            {albumInfo?.tracks?.track && (
+            {tracks.length > 0 && (
               <div className="flex items-center gap-2">
                 <FaPlay />
-                <span>{albumInfo.tracks.track.length} Şarkı</span>
+                <span>{tracks.length} Şarkı</span>
               </div>
             )}
             {totalDuration > 0 && (
@@ -149,7 +154,7 @@ export default function AlbumDetail() {
             <div className="mb-8">
               <h2 className="text-xl font-semibold mb-3">Şarkı Listesi</h2>
               <div className="bg-gray-800 rounded-lg overflow-hidden">
-                {albumInfo.tracks.track.map((track, index) => (
+                {tracks.map((track, index) => (
                   <div
                     key={track.name}
                     className="flex items-center px-4 py-3 hover:bg-gray-700/50 transition-colors border-b border-gray-700/50 last:border-0"

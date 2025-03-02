@@ -1,9 +1,20 @@
+import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { FaCompactDisc, FaUser } from 'react-icons/fa';
 
 export default function Navbar() {
   const { currentUser, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Çıkış yapılırken hata:', error);
+    }
+  };
 
   return (
     <nav className="bg-gray-900/60 backdrop-blur-lg border-b border-gray-800/50 sticky top-0 z-50">
@@ -47,7 +58,7 @@ export default function Navbar() {
                   <span>Profilim</span>
                 </Link>
                 <button
-                  onClick={() => logout()}
+                  onClick={handleLogout}
                   className="px-4 py-2 rounded-lg text-gray-300 hover:text-white hover:bg-gray-800/50 transition-all duration-200"
                 >
                   Çıkış Yap
