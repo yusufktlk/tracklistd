@@ -13,6 +13,7 @@ import { spotifyApi } from '../services/spotify';
 import { toast } from 'react-hot-toast';
 import Modal from '../components/Modal';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
+import EditFavoriteAlbumsModal from '../components/EditFavoriteAlbumsModal';
 
 export default function Profile() {
   const { userId } = useParams();
@@ -23,6 +24,7 @@ export default function Profile() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDisconnectModalOpen, setIsDisconnectModalOpen] = useState(false);
+  const [isEditingFavorites, setIsEditingFavorites] = useState(false);
 
   useEffect(() => {
     async function fetchUserProfile() {
@@ -394,6 +396,51 @@ export default function Profile() {
         </div>
       </div>
 
+      <div className="bg-gray-800 rounded-lg p-6 mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold">Favori Albümler</h2>
+          {isOwnProfile && (
+            <button
+              onClick={() => setIsEditingFavorites(true)}
+              className="text-sm text-gray-400 hover:text-white transition-colors"
+            >
+              Düzenle
+            </button>
+          )}
+        </div>
+        
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {userProfile?.favoriteAlbums?.map((album, index) => (
+            <Link
+              key={album.id}
+              to={`/album/${album.artist}/${album.name}`}
+              className="group relative aspect-square overflow-hidden rounded-lg"
+            >
+              <img
+                src={album.image}
+                alt={album.name}
+                className="w-full h-full object-cover transition-transform group-hover:scale-110"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                <div>
+                  <div className="font-medium text-white">{album.name}</div>
+                  <div className="text-sm text-gray-300">{album.artist}</div>
+                </div>
+              </div>
+            </Link>
+          ))}
+          
+          {isOwnProfile && (!userProfile?.favoriteAlbums || userProfile.favoriteAlbums.length < 4) && (
+            <button
+              onClick={() => setIsEditingFavorites(true)}
+              className="aspect-square rounded-lg border-2 border-dashed border-gray-700 hover:border-gray-500 transition-colors flex items-center justify-center"
+            >
+              <span className="text-gray-500">Albüm Ekle</span>
+            </button>
+          )}
+        </div>
+      </div>
+
       {isConnected && renderSpotifyStats()}
 
       <div className="flex space-x-1 bg-gray-800 p-1 rounded-lg mb-8 max-w-md">
@@ -532,6 +579,12 @@ export default function Profile() {
           </ul>
         </div>
       </DeleteConfirmModal>
+
+      <EditFavoriteAlbumsModal
+        isOpen={isEditingFavorites}
+        onClose={() => setIsEditingFavorites(false)}
+        currentFavorites={userProfile?.favoriteAlbums || []}
+      />
     </div>
   );
 } 

@@ -101,6 +101,7 @@ export function AuthProvider({ children }) {
       const userRef = doc(db, 'users', currentUser.uid);
       await setDoc(userRef, {
         ...data,
+        favoriteAlbums: data.favoriteAlbums || [],
         updatedAt: new Date().toISOString()
       }, { merge: true });
 
